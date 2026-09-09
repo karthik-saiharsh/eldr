@@ -1,0 +1,30 @@
+package main
+
+import "core:fmt"
+
+clear_screen :: proc() {
+	// Clear the Screen
+	fmt.print("\x1b[2J")
+	// Move Cursor Back to the top
+	fmt.print("\x1b[H")
+}
+
+main :: proc() {
+
+	clear_screen()
+
+	width: int = 50
+	height: int = 5
+
+	for i := 0; i < height; i += 1 {
+		for j := 0; j < width; j += 1 {
+			if i == 3 {
+				fmt.print("@")
+			} else {
+				fmt.print(".")
+			}
+		}
+
+		fmt.println()
+	}
+}
