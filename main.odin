@@ -4,9 +4,9 @@ import "core:fmt"
 import "core:math/rand"
 import "core:time"
 
-width: int = 30
-height: int = 30
-cooling: int = 10
+width: int = 60
+height: int = 50
+cooling: int = 5
 spread: int = 1
 rand_min: int = -5
 rand_max: int = 5
@@ -39,7 +39,7 @@ display_heat :: proc() {
 	for y := 0; y < height; y += 1 {
 		for x := 0; x < width; x += 1 {
 			num: int = heat[get_index_from_coords(x, y)]
-			fmt.printf("%c ", get_display_char(num))
+			fmt.printf("%s ", get_display_char(num))
 		}
 		fmt.println()
 	}
@@ -90,23 +90,23 @@ update_heat :: proc() {
 	next_heat = temp
 }
 
-get_display_char :: proc(num: int) -> rune {
+get_display_char :: proc(num: int) -> string {
 	if num == 0 {
-		return ' '
+		return " "
 	} else if num >= 1 && num <= 15 {
-		return '.'
+		return "\x1b[38;5;52m.\x1b[0m" // Dark Red
 	} else if num >= 16 && num <= 30 {
-		return ':'
+		return "\x1b[38;5;88m:\x1b[0m" // Red
 	} else if num >= 31 && num <= 45 {
-		return '*'
+		return "\x1b[38;5;196m*\x1b[0m" // Bright red
 	} else if num >= 46 && num <= 60 {
-		return 'o'
+		return "\x1b[38;5;202mo\x1b[0m" // Orange
 	} else if num >= 61 && num <= 75 {
-		return 'O'
+		return "\x1b[38;5;208mO\x1b[0m" // Orange/yellow
 	} else if num >= 76 && num <= 90 {
-		return '#'
+		return "\x1b[38;5;226m#\x1b[0m" // Yellow
 	} else {
-		return '@'
+		return "\x1b[38;5;255m@\x1b[0m" // White
 	}
 }
 
