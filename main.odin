@@ -2,11 +2,12 @@ package main
 
 import "core:fmt"
 import "core:math/rand"
+import "core:time"
 
 width: int = 30
 height: int = 30
-cooling: int = 5
-spread: int = 3
+cooling: int = 10
+spread: int = 1
 rand_min: int = -5
 rand_max: int = 5
 
@@ -24,7 +25,7 @@ get_index_from_coords :: proc(x: int, y: int) -> int {
 
 clear_screen :: proc() {
 	// Clear the Screen
-	fmt.print("\x1b[2J")
+	// fmt.print("\x1b[2J")
 	// Move Cursor Back to the top
 	fmt.print("\x1b[H")
 }
@@ -45,53 +46,45 @@ display_heat :: proc() {
 }
 
 update_heat :: proc() {
-	// Make the bottom row 99 always (fire source)
 	for x := 0; x < width; x += 1 {
-		index: int = get_index_from_coords(x, height - 1)
-		next_heat[index] = 99
+		next_heat[get_index_from_coords(x, height - 1)] = 0
 	}
 
-	// Calculate the values of upper rows from lower rows
-	for y := height - 2; y >= 0; y -= 1 {
+	for x := width / 4; x < width * 3 / 4; x += 1 {
+		next_heat[get_index_from_coords(x, height - 1)] = 99
+	}
 
+	for y := height - 2; y >= 0; y -= 1 {
 		for x := 0; x < width; x += 1 {
 
-			offset: int = rand.int_max(spread - (-spread) + 1) + (-spread)
+			// Pick a cell underneath, but randomly shift left/right.
+			offset := rand.int_max(spread * 2 + 1) - spread
 
-			// We need to propagate upward, the average of the 3 direct cells right below
-			sum: int = 0
-			n: int = 0
+			source_x := x + offset
 
-			sample_x: int = x + offset
-			sample_x = min(width - 1, max(0, sample_x))
-
-			sum += heat[get_index_from_coords(min(width - 1, max(0, sample_x)), y + 1)]
-			n += 1
-
-			if sample_x > 0 {
-				sum += heat[get_index_from_coords(sample_x - 1, y + 1)]
-				n += 1
+			if source_x < 0 {
+				source_x = 0
+			}
+			if source_x >= width {
+				source_x = width - 1
 			}
 
-			if sample_x < width - 1 {
-				sum += heat[get_index_from_coords(sample_x + 1, y + 1)]
-				n += 1
-			}
+			// Take heat from ONE cell below.
+			old_val := heat[get_index_from_coords(source_x, y + 1)]
 
-			new_val: int = sum / n - cooling
-			rand_no: int = rand.int_max(rand_max - rand_min + 1) + rand_min
-			new_val += rand_no
+			// Random cooling.
+			decay := rand.int_max(cooling) + 1
+
+			new_val := old_val - decay
 
 			if new_val < 0 {
 				new_val = 0
 			}
 
-			// Assign new average to the top row cell
 			next_heat[get_index_from_coords(x, y)] = new_val
 		}
 	}
 
-	// Swap the buffers
 	temp := heat
 	heat = next_heat
 	next_heat = temp
@@ -121,15 +114,20 @@ main :: proc() {
 	// Initialize Heat Buffer
 	init_heat()
 
-	// Make the bottom row be the hottest
 	for x := 0; x < width; x += 1 {
-		write(heat, x, height - 1, 99)
+		heat[get_index_from_coords(x, height - 1)] = 0
+	}
+
+	for x := width / 4; x < width * 3 / 4; x += 1 {
+		heat[get_index_from_coords(x, height - 1)] = 99
 	}
 
 	// Play the fire animation
-	for x := 0; x < 100; x += 1 {
+	for {
 		clear_screen()
 		display_heat()
 		update_heat()
+
+		time.sleep(40 * time.Millisecond)
 	}
 }
